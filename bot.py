@@ -9,9 +9,15 @@ API_ID = os.environ.get("API_ID")
 API_HASH = os.environ.get("API_HASH")
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
+# പുതിയ പൈത്തൺ വേർഷനുകൾക്കായി ഇവന്റ് ലൂപ്പ് സെറ്റ് ചെയ്യുന്നു
+try:
+    loop = asyncio.get_event_loop()
+except RuntimeError:
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
 app = Client("jiohotstar_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# ഡൗൺലോഡ് പ്രോഗ്രസ്സ് അപ്ഡേറ്റ് ചെയ്യാൻ
 def get_progress_hook(client, message):
     last_update_time = 0
     def progress_hook(d):
@@ -37,16 +43,14 @@ def get_progress_hook(client, message):
                 last_update_time = current_time
     return progress_hook
 
-# /start കമാൻഡ് വർക്ക് ചെയ്യുമ്പോൾ വരുന്ന വെൽക്കം മെസ്സേജ്
 @app.on_message(filters.command("start") & filters.private)
 async def start_command(client, message):
     await message.reply_text(
         "👋 സ്വാഗതം!\n\n"
         "ഞാൻ ഒരു **JioHotstar Video Downloader Bot** ആണ്. "
-        "നിങ്ങൾക്ക് ആവശ്യമുള്ള ജിയോ ഹോസ്റ്റാർ ലിങ്ക് ഇവിടെ അയച്ചു തന്നാൽ, വിവിധ ക്വാളിറ്റികളിൽ (1080p, 720p മുതലായവ) വീഡിയോ ഡൗൺലോഡ് ചെയ്ത് തരുന്നതാണ്."
+        "നിങ്ങൾക്ക് ആവശ്യമുള്ള ജിയോ ഹോസ്റ്റാർ ലിങ്ക് ഇവിടെ അയച്ചു തന്നാൽ, വിവിധ ക്വാളിറ്റികളിൽ വീഡിയോ ഡൗൺലോഡ് ചെയ്ത് തരുന്നതാണ്."
     )
 
-# ലിങ്ക് പരിശോധിക്കാനുള്ള ഫങ്ഷൻ
 @app.on_message(filters.text & filters.private & ~filters.command("start"))
 async def get_link(client, message):
     url = message.text.strip()
@@ -66,7 +70,6 @@ async def get_link(client, message):
     else:
         await message.reply_text("ദയവായി ശരിയായ ജിയോ ഹോസ്റ്റാർ ലിങ്ക് അയക്കുക.")
 
-# ബട്ടൺ ക്ലിക്ക് ചെയ്യുമ്പോൾ ഡൗൺലോഡ് ആകുന്നത്
 @app.on_callback_query(filters.regex("^dl\\|"))
 async def download_video(client, callback_query: CallbackQuery):
     data_parts = callback_query.data.split("|")
